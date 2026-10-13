@@ -118,13 +118,24 @@ const say = (id, t) => $(id).textContent = t;
 let radios = {}, counts = {}, watched = {};
 
 /* ---------- Bips radio ---------- */
+function hiss(dur, vol) {   // souffle de radio qui s'éteint (squelch)
+  const n = Math.floor(ac.sampleRate * dur), buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 1.5);
+  const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+  src.buffer = buf; f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.6; g.gain.value = vol;
+  src.connect(f); f.connect(g); g.connect(ac.destination); src.start();
+}
 function beep(kind) {
   if (!ac || (deaf && (kind === "rx" || kind === "rxend"))) return;
   if (ac.state === "suspended") ac.resume();
+  const start = kind === "tx" || kind === "rx", own = kind === "tx" || kind === "end";
+  const vol = own ? 0.5 : 0.3, t = ac.currentTime;
+  hiss(start ? 0.16 : 0.32, vol);
   const o = ac.createOscillator(), g = ac.createGain();
-  o.type = "square"; o.frequency.value = kind === "tx" ? 1400 : kind === "rx" ? 1100 : 800;
-  g.gain.value = 0.05; o.connect(g); g.connect(ac.destination);
-  o.start(); o.stop(ac.currentTime + (kind === "end" || kind === "rxend" ? 0.12 : 0.07));
+  o.type = "square"; o.frequency.value = start ? (own ? 1400 : 1100) : 800;
+  g.gain.value = 0.04; o.connect(g); g.connect(ac.destination);
+  const at = start ? t + 0.12 : t;
+  o.start(at); o.stop(at + (start ? 0.07 : 0.09));
 }
 
 /* ---------- Étape 1 : indicatif ---------- */
