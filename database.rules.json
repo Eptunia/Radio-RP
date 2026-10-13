@@ -1,0 +1,38 @@
+{
+  "rules": {
+    "radios": {
+      ".read": "auth != null",
+      "$r": {
+        ".write": "auth != null && (!data.exists() || data.child('by').val() === auth.uid)",
+        ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 24 && newData.child('by').val() === auth.uid"
+      }
+    },
+    "secrets": {
+      "$r": {
+        ".write": "auth != null && root.child('radios/' + $r + '/by').val() === auth.uid"
+      }
+    },
+    "rooms": {
+      "$room": {
+        "members": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.val() === root.child('secrets/' + $room).val()"
+          }
+        },
+        "peers": {
+          ".read": "auth != null && (!root.child('secrets/' + $room).exists() || root.child('rooms/' + $room + '/members/' + auth.uid).exists())",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && (!root.child('secrets/' + $room).exists() || root.child('rooms/' + $room + '/members/' + auth.uid).exists())"
+          }
+        },
+        "signals": {
+          "$to": {
+            ".read": "auth != null && auth.uid === $to",
+            "$id": { ".write": "auth != null && (!data.exists() || auth.uid === $to)" }
+          }
+        }
+      }
+    }
+  }
+}

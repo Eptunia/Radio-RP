@@ -5,62 +5,99 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Radio RP</title>
 <style>
-:root{--bg:#12150d;--body:#2a3020;--edge:#3d4730;--lcd:#b9cb6e;--ink:#1d2409;--amber:#f0a81c;--red:#d9442f;--tx:#dfe5c9;--mut:#8f9a74}
+:root{--bg:#07090d;--hi:#5fd4ff;--tx:#cfe3f5;--mut:#7f90a4;--edge:#3b4452;--ink:#0a0d12}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,sans-serif;display:flex;justify-content:center;align-items:center;padding:12px;user-select:none}
-.radio{width:100%;max-width:380px;background:var(--body);border:2px solid var(--edge);border-radius:28px;padding:20px;box-shadow:0 24px 60px #000a}
-.lcd{background:var(--lcd);color:var(--ink);border-radius:10px;padding:14px;font-family:ui-monospace,Consolas,monospace;box-shadow:inset 0 3px 8px #0006;min-height:110px}
-.lcd .freq{font-size:34px;font-weight:700;letter-spacing:1px}
+body{background:radial-gradient(ellipse at 50% 0,#14202e,var(--bg) 60%);color:var(--tx);font:15px/1.4 system-ui,sans-serif;display:flex;justify-content:center;align-items:flex-start;padding:70px 12px 24px;user-select:none;overflow-y:auto}
+.radio{position:relative;width:100%;max-width:360px;padding:20px 18px 22px;border-radius:34px 34px 42px 42px;border:1px solid var(--edge);background:linear-gradient(165deg,#2c333e,#161a21 55%,#0d1015);box-shadow:inset 0 2px 0 #4a5666,inset 0 -6px 14px #0008,0 26px 60px #000c}
+.antenna{position:absolute;top:-52px;left:40px;width:22px;height:60px;border-radius:11px 11px 3px 3px;background:linear-gradient(90deg,#07080b,#2d343f 45%,#07080b);border:1px solid #1b2028}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-left:64px}
+.led{width:11px;height:11px;border-radius:50%;background:#14202d;box-shadow:inset 0 1px 2px #000}
+.radio:has(.lcd.rx) .led{background:var(--hi);box-shadow:0 0 10px var(--hi)}
+.radio:has(.lcd.tx) .led{background:#ff4b3e;box-shadow:0 0 10px #ff4b3e}
+.brand{color:var(--mut);font-size:13px;letter-spacing:1px;flex:1}
+.knob{width:38px;height:38px;border-radius:50%;background:repeating-conic-gradient(#1a1f27 0 8deg,#2e3642 8deg 16deg);border:2px solid #0a0c10;box-shadow:0 3px 6px #000a,inset 0 0 0 5px #11151b}
+.lcd{background:#06141f;color:var(--hi);border-radius:12px;padding:14px;font-family:ui-monospace,Consolas,monospace;min-height:104px;border:3px solid var(--ink);box-shadow:0 0 0 2px var(--edge),inset 0 0 24px #0b5a8566;text-shadow:0 0 8px #5fd4ff88}
+.lcd .freq{font-size:32px;font-weight:700;letter-spacing:1px;overflow:hidden;white-space:nowrap}
 .lcd .st{margin-top:6px;font-size:14px;min-height:20px}
-.lcd.tx{background:var(--amber)} .lcd.rx{background:#d8e69a}
+.lcd.rx{background:#082a40}
+.lcd.tx{background:#2a0c0c;color:#ff9088;text-shadow:0 0 8px #ff4b3e88;box-shadow:0 0 0 2px var(--edge),inset 0 0 24px #ff4b3e44}
 label{display:block;margin:14px 0 4px;color:var(--mut);font-size:13px}
-input{width:100%;padding:12px;border-radius:8px;border:1px solid var(--edge);background:#1a1f12;color:var(--tx);font-size:16px}
-input:focus,button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+input.f{width:100%;padding:12px;border-radius:8px;border:1px solid var(--edge);background:var(--ink);color:var(--tx);font-size:16px}
+:focus-visible{outline:2px solid var(--hi);outline-offset:2px}
 button{font:inherit;cursor:pointer}
-.join{width:100%;margin-top:18px;padding:14px;border:0;border-radius:10px;background:var(--amber);color:#2a1d00;font-weight:700;font-size:16px}
+.join{width:100%;margin-top:18px;padding:14px;border:1px solid #0a0d12;border-radius:12px;background:linear-gradient(#3f8fd6,#1d5c99);color:#fff;font-weight:700;font-size:16px;box-shadow:0 4px 0 #0f3558}
+.join:active{transform:translateY(3px);box-shadow:0 1px 0 #0f3558}
 .err{color:#ff9d8f;margin-top:10px;min-height:20px;font-size:14px}
-#room{display:none}
-.ptt{display:block;width:170px;height:170px;margin:22px auto 8px;border-radius:50%;border:6px solid #11140b;background:radial-gradient(circle at 35% 30%,#e7573f,var(--red) 60%,#8f2616);color:#fff;font-size:20px;font-weight:700;box-shadow:0 8px 0 #5c1a0f,0 14px 24px #0008;touch-action:none;transition:transform .05s,box-shadow .05s}
-.ptt.on{transform:translateY(6px);box-shadow:0 2px 0 #5c1a0f,0 4px 10px #0008;background:radial-gradient(circle at 35% 30%,#ffc04d,var(--amber) 60%,#a56c00);color:#2a1d00}
-.hint{text-align:center;color:var(--mut);font-size:13px;margin-bottom:12px}
-ul{list-style:none;margin:0;padding:0;max-height:170px;overflow:auto}
-li{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--edge)}
-.dot{width:10px;height:10px;border-radius:50%;background:#59634a;flex:none}
-li.talk .dot{background:var(--amber);box-shadow:0 0 8px var(--amber)} li.talk{color:var(--amber)}
-.quit{width:100%;margin-top:14px;padding:10px;border-radius:8px;border:1px solid var(--edge);background:transparent;color:var(--mut)}
-.ctl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.ctl button{padding:10px;border-radius:8px;border:1px solid var(--edge);background:#1a1f12;color:var(--tx);font-size:14px}
-.ctl button[aria-pressed=true]{background:var(--amber);color:#2a1d00;border-color:var(--amber);font-weight:700}
-.vol{grid-column:1/3;display:flex;align-items:center;gap:10px;color:var(--mut);font-size:13px}
-.vol input{padding:0;accent-color:var(--amber)}
+#room{display:none;margin-top:14px}
+.ctl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.ctl button{padding:10px;border-radius:10px;border:1px solid #0a0d12;background:linear-gradient(#2f3743,#1c222b);color:var(--tx);font-size:14px;box-shadow:0 3px 0 #07090d}
+.ctl button[aria-pressed=true]{background:linear-gradient(#3f8fd6,#1d5c99);color:#fff;font-weight:700}
+.vol{grid-column:1/3;display:flex;align-items:center;gap:10px;color:var(--mut);font-size:13px;margin:4px 0 0}
+.vol input{flex:1;padding:0;accent-color:var(--hi)}
+.ptt{display:block;width:100%;height:96px;border-radius:20px;border:2px solid #0a0d12;background:repeating-linear-gradient(90deg,#0b0d11 0 6px,#171b22 6px 8px);color:var(--tx);font-size:21px;font-weight:700;box-shadow:0 7px 0 #05060a,0 12px 22px #000a,inset 0 0 0 1px var(--edge);touch-action:none;transition:transform .05s,box-shadow .05s}
+.ptt.on{transform:translateY(6px);box-shadow:0 1px 0 #05060a,0 0 26px #3f8fd688,inset 0 0 0 1px var(--hi);background:repeating-linear-gradient(90deg,#10314d 0 6px,#18466d 6px 8px);color:#fff}
+.hint{text-align:center;color:var(--mut);font-size:13px;margin:14px 0 8px}
+ul{list-style:none;margin:0;padding:6px 10px;max-height:150px;overflow:auto;background:var(--ink);border-radius:10px;border:1px solid var(--edge)}
+li{display:flex;align-items:center;gap:10px;padding:7px 2px;border-bottom:1px solid #1b222c}
+li:last-child{border:0}
+.dot{width:10px;height:10px;border-radius:50%;background:#2c3644;flex:none}
+li.talk{color:var(--hi)} li.talk .dot{background:var(--hi);box-shadow:0 0 8px var(--hi)}
+.quit{width:100%;margin-top:14px;padding:10px;border-radius:10px;border:1px solid var(--edge);background:transparent;color:var(--mut)}
+.grille{height:64px;margin-top:18px;border-radius:14px;background:radial-gradient(circle,#030405 2.2px,transparent 2.8px) 0 0/12px 12px,#12161c;box-shadow:inset 0 3px 8px #000c;border:1px solid #232a34}
+#lobby{display:none;margin-top:14px}
+.sec{margin:16px 0 6px;color:var(--mut);font-size:13px}
+.who{color:var(--mut);font-size:13px}.who b{color:var(--hi)}
+.row{display:flex;gap:8px}.row input{flex:1}
+input.f+input.f{margin-top:8px}
+.mini{padding:8px 12px;border-radius:8px;border:1px solid #0a0d12;background:linear-gradient(#3f8fd6,#1d5c99);color:#fff;font-size:13px;font-weight:700}
+.mini.del{background:#2a1416;color:#ff9d8f;border-color:#4a2327}
+#radios li{flex-wrap:wrap}
+.rname{flex:1;min-width:110px}.cnt{color:var(--mut);font-size:12px}
+.empty{color:var(--mut);font-size:13px}
+#lobby .join{margin-top:12px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<div class="radio">
+<main class="radio">
+  <div class="antenna"></div>
+  <div class="top"><span class="led"></span><span class="brand">RP-400</span><span class="knob"></span></div>
   <div class="lcd" id="lcd"><div class="freq" id="freq">--.-</div><div class="st" id="st">Hors ligne</div></div>
 
   <form id="login" onsubmit="return false">
-    <label for="name">Indicatif</label>
-    <input id="name" maxlength="20" placeholder="ex: Adam-12" autocomplete="off">
-    <label for="chan">Fréquence</label>
-    <input id="chan" maxlength="20" placeholder="ex: 155.5 ou police" autocomplete="off">
-    <button class="join" id="joinBtn">Allumer la radio</button>
+    <label for="name">Ton indicatif</label>
+    <input class="f" id="name" maxlength="20" placeholder="ex: Adam-12" autocomplete="off">
+    <button class="join" id="nextBtn">Continuer</button>
     <div class="err" id="err"></div>
   </form>
 
+  <div id="lobby">
+    <div class="who">Indicatif : <b id="who"></b></div>
+    <div class="sec">Radios disponibles</div>
+    <ul id="radios"></ul>
+    <div class="sec">Rejoindre une fréquence</div>
+    <div class="row"><input class="f" id="freqIn" maxlength="20" placeholder="ex: 155.5" autocomplete="off"><button class="mini" id="freqBtn">Rejoindre</button></div>
+    <div class="sec">Créer une radio</div>
+    <input class="f" id="newName" maxlength="24" placeholder="Nom de la radio" autocomplete="off">
+    <input class="f" id="newPw" type="password" maxlength="30" placeholder="Mot de passe (facultatif)" autocomplete="new-password">
+    <button class="join" id="createBtn">Créer et rejoindre</button>
+    <div class="err" id="lerr"></div>
+  </div>
+
   <div id="room">
-    <button class="ptt" id="ptt">Parler</button>
-    <div class="hint" id="hint">Maintiens le bouton ou la touche V</div>
     <div class="ctl">
       <button id="muteBtn" aria-pressed="false">Son coupé : non</button>
       <button id="modeBtn" aria-pressed="false">Mode : maintenir</button>
       <label class="vol">Volume <input id="vol" type="range" min="0" max="1" step="0.05" value="1"></label>
     </div>
+    <button class="ptt" id="ptt">Parler</button>
+    <div class="hint" id="hint">Maintiens le bouton ou la touche V</div>
     <ul id="users"></ul>
     <button class="quit" id="quit">Éteindre</button>
   </div>
-</div>
+  <div class="grille"></div>
+</main>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -73,8 +110,11 @@ const $ = id => document.getElementById(id);
 let uid, name, chan, base, me, stream, talking = false, users = {}, peers = {}, queue = Promise.resolve(), ac, deaf = false, vol = 1, toggleMode = false;
 
 $("name").value = localStorage.getItem("rp_name") || "";
-$("chan").value = localStorage.getItem("rp_chan") || "";
 const slug = s => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const sha = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(x => x.toString(16).padStart(2, "0")).join("");
+const show = id => ["login", "lobby", "room"].forEach(x => $(x).style.display = x === id ? "block" : "none");
+const say = (id, t) => $(id).textContent = t;
+let radios = {}, counts = {}, watched = {};
 
 /* ---------- Bips radio ---------- */
 function beep(kind) {
@@ -86,23 +126,78 @@ function beep(kind) {
   o.start(); o.stop(ac.currentTime + (kind === "end" || kind === "rxend" ? 0.12 : 0.07));
 }
 
-/* ---------- Connexion ---------- */
-$("joinBtn").onclick = async () => {
-  name = $("name").value.trim(); chan = slug($("chan").value);
-  if (!name || !chan) { $("err").textContent = "Renseigne ton indicatif et une fréquence."; return; }
-  $("err").textContent = "";
+/* ---------- Étape 1 : indicatif ---------- */
+$("nextBtn").onclick = async () => {
+  name = $("name").value.trim();
+  if (!name) { say("err", "Choisis un indicatif."); return; }
+  say("err", "");
+  try { uid = (await auth.signInAnonymously()).user.uid; }
+  catch (e) { say("err", "Connexion Firebase impossible : vérifie la config, l'auth anonyme et le domaine autorisé."); return; }
+  localStorage.setItem("rp_name", name);
+  $("who").textContent = name;
+  show("lobby");
+  db.ref("radios").on("value", s => { radios = s.val() || {}; renderRadios(); }, () => say("lerr", "Lecture des radios refusée : vérifie les règles de la base."));
+};
+
+/* ---------- Étape 2 : choisir ou créer une radio ---------- */
+function renderRadios() {
+  const ul = $("radios"); ul.innerHTML = "";
+  const ks = Object.keys(radios);
+  if (!ks.length) { ul.innerHTML = '<li class="empty">Aucune radio pour le moment. Crée la première.</li>'; return; }
+  ks.forEach(k => {
+    const r = radios[k];
+    if (!r.locked && !watched[k]) { watched[k] = 1; db.ref("rooms/" + k + "/peers").on("value", s => { counts[k] = s.numChildren(); renderRadios(); }, () => {}); }
+    const li = document.createElement("li");
+    const t = document.createElement("span"); t.className = "rname"; t.textContent = r.name + (r.locked ? " (verrouillée)" : "");
+    const n = document.createElement("span"); n.className = "cnt"; n.textContent = r.locked ? "" : (counts[k] || 0) + " en ligne";
+    const j = document.createElement("button"); j.className = "mini"; j.textContent = "Rejoindre"; j.onclick = () => enter(k, r);
+    li.append(t, n, j);
+    if (r.by === uid) { const d = document.createElement("button"); d.className = "mini del"; d.textContent = "Supprimer"; d.onclick = () => delRadio(k); li.append(d); }
+    ul.appendChild(li);
+  });
+}
+async function delRadio(k) {
+  if (!confirm("Supprimer cette radio ?")) return;
+  try { await db.ref("secrets/" + k).remove(); await db.ref("radios/" + k).remove(); delete counts[k]; }
+  catch (e) { say("lerr", "Suppression impossible."); }
+}
+$("freqBtn").onclick = async () => {
+  const k = slug($("freqIn").value);
+  if (!k) { say("lerr", "Entre une fréquence."); return; }
+  let r; try { r = (await db.ref("radios/" + k).once("value")).val(); } catch (e) {}
+  enter(k, r || { name: $("freqIn").value.trim().slice(0, 24) });
+};
+$("createBtn").onclick = async () => {
+  const label = $("newName").value.trim(), k = slug(label), pw = $("newPw").value;
+  if (!k) { say("lerr", "Donne un nom à ta radio."); return; }
+  say("lerr", "");
+  const data = { name: label.slice(0, 24), by: uid, locked: !!pw };
+  let tx; try { tx = await db.ref("radios/" + k).transaction(c => c ? undefined : data); } catch (e) { say("lerr", "Création refusée : vérifie les règles de la base."); return; }
+  if (!tx.committed) { say("lerr", "Ce nom de radio existe déjà."); return; }
+  if (pw) {
+    try { await db.ref("secrets/" + k).set(await sha(pw)); }
+    catch (e) { await db.ref("radios/" + k).remove(); say("lerr", "Impossible de verrouiller la radio."); return; }
+  }
+  enter(k, data, pw);
+};
+
+/* ---------- Entrer dans une radio ---------- */
+async function enter(k, r, pw) {
+  say("lerr", "");
+  if (r.locked && pw == null) { pw = prompt("Mot de passe de la radio " + r.name + " :"); if (pw == null) return; }
   try {
     ac = new (window.AudioContext || window.webkitAudioContext)();
     stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
-  } catch (e) { $("err").textContent = "Micro refusé ou indisponible (la page doit être en HTTPS)."; return; }
+  } catch (e) { say("lerr", "Micro refusé ou indisponible (la page doit être en HTTPS)."); return; }
   stream.getAudioTracks()[0].enabled = false;
-  try { uid = (await auth.signInAnonymously()).user.uid; }
-  catch (e) { $("err").textContent = "Connexion Firebase impossible : vérifie la config et l'auth anonyme."; return; }
-  localStorage.setItem("rp_name", name); localStorage.setItem("rp_chan", $("chan").value);
-
-  base = db.ref("rooms/" + chan);
+  chan = k; base = db.ref("rooms/" + k);
+  if (r.locked) {
+    try { await base.child("members/" + uid).set(await sha(pw)); }
+    catch (e) { stream.getTracks().forEach(t => t.stop()); say("lerr", "Mot de passe incorrect."); return; }
+  }
   me = base.child("peers/" + uid);
-  await me.set({ name, talking: false });
+  try { await me.set({ name, talking: false }); }
+  catch (e) { stream.getTracks().forEach(t => t.stop()); say("lerr", "Accès refusé à cette radio."); return; }
   me.onDisconnect().remove();
   const sig = base.child("signals/" + uid);
   sig.onDisconnect().remove();
@@ -118,10 +213,10 @@ $("joinBtn").onclick = async () => {
   });
   base.child("peers").on("child_removed", s => { delete users[s.key]; closePeer(s.key); render(); });
 
-  $("login").style.display = "none"; $("room").style.display = "block";
-  $("freq").textContent = $("chan").value.toUpperCase().slice(0, 10);
+  show("room");
+  $("freq").textContent = r.name.toUpperCase().slice(0, 10);
   beep("rx"); render();
-};
+}
 
 $("quit").onclick = async () => { try { await me.remove(); await base.child("signals/" + uid).remove(); } catch (e) {} location.reload(); };
 
