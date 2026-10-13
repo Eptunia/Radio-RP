@@ -69,6 +69,7 @@ input.f+input.f{margin-top:8px}
     <label for="name">Ton indicatif</label>
     <input class="f" id="name" maxlength="20" placeholder="ex: Adam-12" autocomplete="off">
     <button class="join" id="nextBtn">Continuer</button>
+    <button class="mini" id="resumeBtn" style="display:none;width:100%;margin-top:10px;padding:12px"></button>
     <div class="err" id="err"></div>
   </form>
 
@@ -214,11 +215,13 @@ async function enter(k, r, pw) {
   base.child("peers").on("child_removed", s => { delete users[s.key]; closePeer(s.key); render(); });
 
   show("room");
+  localStorage.setItem("rp_last", JSON.stringify({ k, r: { name: r.name, locked: !!r.locked } }));
+  keepAlive();
   $("freq").textContent = r.name.toUpperCase().slice(0, 10);
   beep("rx"); render();
 }
 
-$("quit").onclick = async () => { try { await me.remove(); await base.child("signals/" + uid).remove(); } catch (e) {} location.reload(); };
+$("quit").onclick = async () => { localStorage.removeItem("rp_last"); try { await me.remove(); await base.child("signals/" + uid).remove(); } catch (e) {} location.reload(); };
 
 /* ---------- WebRTC (signalisation via Firebase) ---------- */
 const send = (to, msg) => base.child("signals/" + to).push(JSON.parse(JSON.stringify({ from: uid, ...msg })));
@@ -255,6 +258,40 @@ async function handle(m) {
   } else if (!p) return;
   else if (m.k === "answer") { await p.pc.setRemoteDescription(m.d); await flush(p); }
   else if (m.k === "ice") { p.pc.remoteDescription ? await p.pc.addIceCandidate(m.d) : p.pend.push(m.d); }
+}
+
+/* ---------- Rester dans la fréquence (écran verrouillé, autre appli, rechargement) ---------- */
+let wl, silent;
+function silentWav() {
+  const n = 8000, b = new DataView(new ArrayBuffer(44 + n)), w = (o, t) => [...t].forEach((c, i) => b.setUint8(o + i, c.charCodeAt(0)));
+  w(0, "RIFF"); b.setUint32(4, 36 + n, true); w(8, "WAVEfmt "); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 1, true);
+  b.setUint32(24, 8000, true); b.setUint32(28, 8000, true); b.setUint16(32, 1, true); b.setUint16(34, 8, true); w(36, "data"); b.setUint32(40, n, true);
+  for (let i = 0; i < n; i++) b.setUint8(44 + i, 128);
+  return URL.createObjectURL(new Blob([b], { type: "audio/wav" }));
+}
+async function keepAlive() {
+  try { wl = await navigator.wakeLock.request("screen"); } catch (e) {}
+  if (!silent) { silent = new Audio(silentWav()); silent.loop = true; }
+  silent.play().catch(() => {});
+  if ("mediaSession" in navigator) navigator.mediaSession.metadata = new MediaMetadata({ title: "Radio " + $("freq").textContent, artist: name });
+}
+async function fixMic() {
+  const t = stream && stream.getAudioTracks()[0];
+  if (!t || t.readyState !== "ended") return;
+  try {
+    const nt = (await navigator.mediaDevices.getUserMedia({ audio: true })).getAudioTracks()[0];
+    nt.enabled = false; stream.removeTrack(t); stream.addTrack(nt); talking = false; me.update({ talking: false });
+    Object.values(peers).forEach(p => p.pc.getSenders().forEach(x => x.track && x.track.kind === "audio" && x.replaceTrack(nt)));
+  } catch (e) {}
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && me) { keepAlive(); fixMic(); if (ac && ac.state === "suspended") ac.resume(); }
+});
+const last = JSON.parse(localStorage.getItem("rp_last") || "null");
+if (last && localStorage.getItem("rp_name")) {
+  $("resumeBtn").style.display = "block";
+  $("resumeBtn").textContent = "Reprendre : " + last.r.name;
+  $("resumeBtn").onclick = async () => { await $("nextBtn").onclick(); if (uid) enter(last.k, last.r); };
 }
 
 /* ---------- Push-to-talk ---------- */
